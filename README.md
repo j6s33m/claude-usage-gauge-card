@@ -7,6 +7,8 @@ weekly usage bar below it that includes straight-line pacing.
 The card reads its colors from your active Home Assistant theme, so it fits
 light and dark dashboards without any color configuration.
 
+![Claude Usage Gauge Card](images/card-preview.png)
+
 ## Features
 
 - Needle gauge with gradient arc, tick marks, and a status band

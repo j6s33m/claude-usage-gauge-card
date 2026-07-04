@@ -1,65 +1,70 @@
 # Getting this into GitHub and HACS
 
-## 1. Assemble the repo folder
+This folder is a complete, ready-to-push repo. Your v15 card JS, the version
+banner, the screenshot, and all HACS files are already in place.
 
-Copy your current `claude-usage-gauge-card.js` (v14, from your workspace) into
-this scaffold folder so it sits at the root next to `hacs.json`. Final layout:
+## Layout (already assembled)
 
 ```
 claude-usage-gauge-card/
-├── claude-usage-gauge-card.js   <- your v14 file
+├── claude-usage-gauge-card.js   (your card, v15, banner included)
 ├── hacs.json
-├── README.md
+├── README.md                    (references images/card-preview.png)
 ├── LICENSE
+├── SETUP-STEPS.md               (this file)
 ├── .gitignore
+├── images/
+│   └── card-preview.png
 └── .github/
     └── workflows/
         └── release.yml
 ```
 
-## 2. Add the version banner (optional but recommended)
-
-Paste the contents of `version-banner-snippet.js` at the very bottom of your
-JS file. It just logs the version to the browser console.
-
-## 3. Create the GitHub repo
+## 1. Create the GitHub repo
 
 - New **public** repo. Suggested name: `claude-usage-gauge-card`.
-- Public is required for HACS to read it without a token. A plain,
-  unpromoted name keeps it effectively private in practice.
+- Public is required for HACS to read it without a token. A plain, unpromoted
+  name keeps it effectively private in practice.
 
-## 4. Push
+## 2. Push
 
-From inside the repo folder:
+From inside this folder:
 
 ```
 git init
 git add .
-git commit -m "Initial release: v14 card, HACS scaffold"
+git commit -m "Initial release: v15 card, HACS package, screenshot"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/claude-usage-gauge-card.git
 git push -u origin main
 ```
 
-## 5. Cut the first release
+## 3. Cut the first release
 
-- On GitHub: **Releases → Draft a new release**.
+- On GitHub: **Releases** then **Draft a new release**.
 - Tag: `1.0.0`. Title: `1.0.0`. Publish.
-- The workflow attaches the JS file to the release automatically.
+- The workflow attaches the JS file to the release automatically. HACS pulls
+  this release asset, so do not skip this step.
 
-## 6. Add to HACS
+## 4. Add to HACS
 
-- Home Assistant → **HACS** → three-dot menu → **Custom repositories**.
+- Home Assistant then **HACS** then three-dot menu then **Custom repositories**.
 - URL: your repo. Category: **Dashboard**. Add.
 - Open the card entry, click **Download**.
+- Hard refresh the browser.
 
-## 7. Retire the manual copy
+## 5. Retire the manual copy
 
 - Delete the hand-placed `/config/www/claude-usage-gauge-card.js`.
-- Remove the old manual resource under
-  Settings → Dashboards → Resources that pointed at `/local/...`.
+- Remove the old manual resource under Settings then Dashboards then Resources
+  that pointed at `/local/...`.
 - Keep only the HACS-managed resource (it points at `/hacsfiles/...`).
-- Hard refresh. Your existing card config works unchanged.
+- Your existing card config works unchanged.
+
+## Confirming the version loaded
+
+Open the browser console (F12). You will see a banner reading
+`CLAUDE-USAGE-GAUGE-CARD v1.0.0`. Bump that string in the JS on each release.
 
 ## Ongoing updates
 
