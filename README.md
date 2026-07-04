@@ -32,9 +32,24 @@ light and dark dashboards without any color configuration.
 HACS registers the dashboard resource automatically. You do **not** need to add
 it manually under Settings → Dashboards → Resources.
 
+## Data source
+
+This card expects Home Assistant entities that report Claude session and weekly
+usage as percentages.
+
+The companion [Claude Usage for Home Assistant](https://github.com/j6s33m/claude-usage)
+package creates the sensors used in the examples below, including:
+
+- `sensor.claude_session_usage`
+- `sensor.claude_weekly_usage`
+- `sensor.claude_weekly_resets`
+
+You can also use your own sensors as long as the session and weekly entities
+report values from `0` to `100`.
+
 ## Adding the card
 
-In your dashboard, add a manual card:
+After installing the sensors, add a manual card:
 
 ```yaml
 type: custom:claude-usage-gauge-card
