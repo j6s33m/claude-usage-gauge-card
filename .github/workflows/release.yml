@@ -1,0 +1,23 @@
+name: Release
+
+# Attaches the card JS to each GitHub release so HACS can download it
+# directly as a release asset.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Upload card to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: claude-usage-gauge-card.js
