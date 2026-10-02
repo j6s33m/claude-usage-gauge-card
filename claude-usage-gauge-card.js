@@ -1,4 +1,11 @@
 // claude-usage-gauge-card.js
+// VERSION: 16
+//   - Theme support: card colors are now bound LIVE to Home Assistant theme
+//     variables via CSS var() instead of snapshotting them in JS. Switching
+//     themes (including dark/light mode) updates the card instantly with no
+//     reload or state update needed, and any custom theme is honored.
+//     Removed _syncTheme/_resolveToRgb/_parseRgb (the card has no shadow DOM,
+//     so the old :host defaults never applied anyway).
 // VERSION: 15
 //   - Added a console version banner (prints the loaded build on start).
 //   - Removed em dashes from header/inline comments.
@@ -107,7 +114,6 @@ class ClaudeUsageGaugeCard extends HTMLElement {
     if (!this._built) {
       this._build();
       this._built = true;
-      this._syncTheme();
     }
     const card = this.querySelector("ha-card");
     if (card) {
@@ -122,7 +128,6 @@ class ClaudeUsageGaugeCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    this._syncTheme();
     const stateObj = hass.states[this._config.entity];
 
     if (!stateObj) {
@@ -341,61 +346,6 @@ class ClaudeUsageGaugeCard extends HTMLElement {
     return target.getTime() - now.getTime();
   }
 
-  // ---- theme resolution (unchanged from v9) ----------------------------
-
-  _syncTheme() {
-    const card = this.querySelector("ha-card");
-    if (!card) return;
-
-    const rootStyles = getComputedStyle(document.documentElement);
-    const bodyStyles = getComputedStyle(document.body);
-    const read = (name, fallback) => {
-      let v = rootStyles.getPropertyValue(name).trim();
-      if (!v) v = bodyStyles.getPropertyValue(name).trim();
-      return v || fallback;
-    };
-
-    const tokens = {
-      "--cug-bg": read("--card-background-color", read("--ha-card-background", "#1c1f26")),
-      "--cug-accent": read("--primary-color", "#7c5cff"),
-      "--cug-accent-2": read("--accent-color", read("--state-icon-active-color", "#9b8cff")),
-      "--cug-track": read("--divider-color", "#2b2f3a"),
-      "--cug-ink": read("--primary-text-color", "#e9ecf6"),
-      "--cug-dim": read("--secondary-text-color", "#8a8f9c"),
-      "--cug-warn": read("--warning-color", "#f5a623"),
-      "--cug-danger": read("--error-color", "#ff5c5c"),
-      "--cug-success": read("--success-color", "#43a047"),
-    };
-    for (const [name, value] of Object.entries(tokens)) {
-      card.style.setProperty(name, value);
-    }
-    this._tokens = tokens;
-
-    const accentRgb = this._parseRgb(this._resolveToRgb(tokens["--cug-accent"], card));
-    if (accentRgb) card.style.setProperty("--cug-accent-rgb", accentRgb.join(","));
-  }
-
-  _resolveToRgb(colorStr, hostEl) {
-    if (!colorStr) return null;
-    const probe = document.createElement("span");
-    probe.style.display = "none";
-    probe.style.color = colorStr;
-    (hostEl || document.body).appendChild(probe);
-    const resolved = getComputedStyle(probe).color;
-    probe.remove();
-    return resolved;
-  }
-
-  _parseRgb(colorStr) {
-    if (!colorStr) return null;
-    const m = colorStr.match(/rgba?\(([^)]+)\)/);
-    if (m) {
-      const parts = m[1].split(",").map((s) => parseFloat(s.trim()));
-      if (parts.length >= 3) return [parts[0], parts[1], parts[2]];
-    }
-    return null;
-  }
-
   // ---- build -----------------------------------------------------------
 
   _build() {
@@ -406,16 +356,23 @@ class ClaudeUsageGaugeCard extends HTMLElement {
     const wrapper = document.createElement("ha-card");
     wrapper.innerHTML = `
       <style>
-        :host {
-          --cug-bg: #1c1f26;
-          --cug-accent: #7c5cff;
-          --cug-accent-2: #9b8cff;
-          --cug-track: #2b2f3a;
-          --cug-ink: #e9ecf6;
-          --cug-dim: #8a8f9c;
-          --cug-warn: #f5a623;
-          --cug-danger: #ff5c5c;
-          --cug-success: #43a047;
+        /* Theme tokens bound LIVE to Home Assistant theme variables.
+           The browser re-resolves these automatically whenever the active
+           theme changes (including dark/light mode switches), so the card
+           always matches the user's theme with no JS re-sync needed.
+           Values after each comma are fallbacks for themes that omit a
+           variable. (The card has no shadow DOM, so :host would not apply;
+           the tokens live on the ha-card element itself.) */
+        ha-card {
+          --cug-bg: var(--card-background-color, var(--ha-card-background, #1c1f26));
+          --cug-accent: var(--primary-color, #7c5cff);
+          --cug-accent-2: var(--accent-color, var(--state-icon-active-color, #9b8cff));
+          --cug-track: var(--divider-color, #2b2f3a);
+          --cug-ink: var(--primary-text-color, #e9ecf6);
+          --cug-dim: var(--secondary-text-color, #8a8f9c);
+          --cug-warn: var(--warning-color, #f5a623);
+          --cug-danger: var(--error-color, #ff5c5c);
+          --cug-success: var(--success-color, #43a047);
         }
         ha-card {
           background: var(--cug-bg);
