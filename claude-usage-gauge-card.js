@@ -1,4 +1,11 @@
 // claude-usage-gauge-card.js
+// VERSION: 17
+//   - Fixed "card stays black" regression from v16: the <style> block is
+//     slotted into ha-card's shadow tree, where a bare `ha-card` type
+//     selector matches nothing, so the --cug-* tokens were never defined
+//     (gauge arc fell back to black). Tokens are now defined with :host and
+//     additionally set inline on the element in _build(), both bound live
+//     to HA theme variables via var().
 // VERSION: 16
 //   - Theme support: card colors are now bound LIVE to Home Assistant theme
 //     variables via CSS var() instead of snapshotting them in JS. Switching
@@ -361,9 +368,14 @@ class ClaudeUsageGaugeCard extends HTMLElement {
            theme changes (including dark/light mode switches), so the card
            always matches the user's theme with no JS re-sync needed.
            Values after each comma are fallbacks for themes that omit a
-           variable. (The card has no shadow DOM, so :host would not apply;
-           the tokens live on the ha-card element itself.) */
-        ha-card {
+           variable.
+           NOTE on scoping: this <style> sits in light DOM inside the
+           ha-card element, which slots it into ha-card's shadow tree, so
+           :host here refers to the ha-card element itself. A bare ha-card
+           type selector would match nothing in that scope. The same tokens
+           are also set inline on the element in _build() as a second,
+           scoping-independent layer. */
+        :host {
           --cug-bg: var(--card-background-color, var(--ha-card-background, #1c1f26));
           --cug-accent: var(--primary-color, #7c5cff);
           --cug-accent-2: var(--accent-color, var(--state-icon-active-color, #9b8cff));
@@ -590,6 +602,24 @@ class ClaudeUsageGaugeCard extends HTMLElement {
 
     this.innerHTML = "";
     this.appendChild(wrapper);
+
+    // Second layer of theme tokens: set inline on the ha-card element so the
+    // --cug-* variables resolve live against the active HA theme no matter
+    // how the browser scopes the <style> block above. var() references in
+    // custom property values re-resolve automatically on theme switches.
+    for (const [name, value] of Object.entries({
+      "--cug-bg": "var(--card-background-color, var(--ha-card-background, #1c1f26))",
+      "--cug-accent": "var(--primary-color, #7c5cff)",
+      "--cug-accent-2": "var(--accent-color, var(--state-icon-active-color, #9b8cff))",
+      "--cug-track": "var(--divider-color, #2b2f3a)",
+      "--cug-ink": "var(--primary-text-color, #e9ecf6)",
+      "--cug-dim": "var(--secondary-text-color, #8a8f9c)",
+      "--cug-warn": "var(--warning-color, #f5a623)",
+      "--cug-danger": "var(--error-color, #ff5c5c)",
+      "--cug-success": "var(--success-color, #43a047)",
+    })) {
+      wrapper.style.setProperty(name, value);
+    }
 
     this._root = wrapper.querySelector(".cug-svg-box");
     this._needle = wrapper.querySelector(".cug-needle");
@@ -942,7 +972,7 @@ window.customCards.push({
 // Prints the loaded version to the browser console so you can confirm which
 // build HACS served. Bump the version string on each release.
 console.info(
-  "%c CLAUDE-USAGE-GAUGE-CARD %c v1.2.1 ",
+  "%c CLAUDE-USAGE-GAUGE-CARD %c v1.2.2 ",
   "color:white;background:#0288b7;font-weight:700;border-radius:3px 0 0 3px;padding:2px 6px;",
   "color:#0288b7;background:#e8f4f8;font-weight:700;border-radius:0 3px 3px 0;padding:2px 6px;"
 );
