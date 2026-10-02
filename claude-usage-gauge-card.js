@@ -1,4 +1,10 @@
 // claude-usage-gauge-card.js
+// VERSION: 18
+//   - Fixed card background precedence: --cug-bg is now
+//     var(--ha-card-background, var(--card-background-color, #1c1f26)),
+//     matching ha-card's own rule. The reversed order made the card solid
+//     black in themes (e.g. Liquid Glass) where --card-background-color is
+//     dark but --ha-card-background is the real card surface.
 // VERSION: 17
 //   - Fixed "card stays black" regression from v16: the <style> block is
 //     slotted into ha-card's shadow tree, where a bare `ha-card` type
@@ -376,7 +382,13 @@ class ClaudeUsageGaugeCard extends HTMLElement {
            are also set inline on the element in _build() as a second,
            scoping-independent layer. */
         :host {
-          --cug-bg: var(--card-background-color, var(--ha-card-background, #1c1f26));
+          /* NOTE: --cug-bg follows ha-card's own precedence --
+            ha-card-background first, then --card-background-color -- so this
+             card paints exactly what a native ha-card would. (Reversing the
+             order made the card dark in themes like Liquid Glass where
+             --card-background-color is dark but --ha-card-background is the
+             glassy card surface.) */
+          --cug-bg: var(--ha-card-background, var(--card-background-color, #1c1f26));
           --cug-accent: var(--primary-color, #7c5cff);
           --cug-accent-2: var(--accent-color, var(--state-icon-active-color, #9b8cff));
           --cug-track: var(--divider-color, #2b2f3a);
@@ -608,7 +620,7 @@ class ClaudeUsageGaugeCard extends HTMLElement {
     // how the browser scopes the <style> block above. var() references in
     // custom property values re-resolve automatically on theme switches.
     for (const [name, value] of Object.entries({
-      "--cug-bg": "var(--card-background-color, var(--ha-card-background, #1c1f26))",
+      "--cug-bg": "var(--ha-card-background, var(--card-background-color, #1c1f26))",
       "--cug-accent": "var(--primary-color, #7c5cff)",
       "--cug-accent-2": "var(--accent-color, var(--state-icon-active-color, #9b8cff))",
       "--cug-track": "var(--divider-color, #2b2f3a)",
@@ -972,7 +984,7 @@ window.customCards.push({
 // Prints the loaded version to the browser console so you can confirm which
 // build HACS served. Bump the version string on each release.
 console.info(
-  "%c CLAUDE-USAGE-GAUGE-CARD %c v1.2.2 ",
+  "%c CLAUDE-USAGE-GAUGE-CARD %c v1.2.3 ",
   "color:white;background:#0288b7;font-weight:700;border-radius:3px 0 0 3px;padding:2px 6px;",
   "color:#0288b7;background:#e8f4f8;font-weight:700;border-radius:0 3px 3px 0;padding:2px 6px;"
 );
